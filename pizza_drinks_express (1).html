@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pizza & Drinks Express - Fast Delivery</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              red: '#E53935',
+              darkRed: '#C62828',
+              orange: '#FF5722',
+              amber: '#FFB300',
+              teal: '#00897B',
+              dark: '#0F172A',
+              cream: '#FFFBEB'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      scroll-behavior: smooth;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #ff5722;
+      border-radius: 4px;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(2deg); }
+    }
+    .animate-float {
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .food-img-shadow {
+      filter: drop-shadow(0 15px 20px rgba(0, 0, 0, 0.15));
+    }
+    
+    .food-card:hover .food-img {
+      transform: scale(1.08) rotate(4deg);
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 pb-20 md:pb-0">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-20 right-5 z-50 transform translate-x-96 opacity-0 transition-all duration-300 ease-in-out bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border-l-4 border-brand-orange">
+    <div class="w-8 h-8 rounded-full bg-brand-orange flex items-center justify-center text-white shrink-0">
+      <i class="fa-solid fa-check text-sm"></i>
+    </div>
+    <div>
+      <h5 id="toast-title" class="font-bold text-sm">Added to Order</h5>
+      <p id="toast-msg" class="text-xs text-slate-300">Item has been added to your bag.</p>
+    </div>
+  </div>
+
+  <!-- Top Banner Promo -->
+  <div class="bg-gradient-to-r from-brand-red via-brand-orange to-brand-amber text-white text-xs md:text-sm py-2 px-4 text-center font-semibold flex items-center justify-center gap-2 shadow-sm">
+    <span class="bg-white text-brand-red px-2.5 py-0.5 rounded-full font-black text-[11px] uppercase tracking-wider">COMBO OFFER</span>
+    <span>🥤 Add any Pizza + Drink to get <strong>₹250 OFF</strong>! Code: <strong>COMBO2026</strong></span>
+  </div>
+
+  <!-- Header & Navbar -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        
+        <!-- Logo -->
+        <a href="#hero" class="flex items-center gap-3 group">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-red via-brand-orange to-brand-amber flex items-center justify-center shadow-lg text-white transform group-hover:rotate-12 transition-transform">
+            <i class="fa-solid fa-pizza-slice text-2xl"></i>
+          </div>
+          <div>
+            <span class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 block leading-none">PIZZA & <span class="text-brand-orange">DRINKS</span></span>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mt-0.5">Express Delivery</span>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav class="hidden md:flex items-center gap-8 font-bold text-sm text-slate-600">
+          <a href="#hero" class="hover:text-brand-orange transition-colors">Home</a>
+          <a href="#menu" onclick="setFilter('pizzas')" class="hover:text-brand-orange transition-colors cursor-pointer">🍕 Pizzas</a>
+          <a href="#menu" onclick="setFilter('drinks')" class="hover:text-brand-orange transition-colors cursor-pointer">🥤 Refreshing Drinks</a>
+          <a href="#offers" class="hover:text-brand-orange transition-colors cursor-pointer">Special Deals</a>
+        </nav>
+
+        <!-- Search & Cart -->
+        <div class="flex items-center gap-3 sm:gap-4">
+          <div class="relative hidden sm:block w-48 lg:w-64">
+            <input type="text" id="searchInput" oninput="filterFoodItems()" placeholder="Search pizza or drink..." class="w-full bg-slate-100 text-xs sm:text-sm rounded-full py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-brand-orange/50 transition-all border border-transparent focus:border-brand-orange" />
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+          </div>
+
+          <button onclick="toggleCartDrawer()" class="relative bg-slate-900 hover:bg-brand-orange text-white px-4 py-2.5 rounded-full font-bold flex items-center gap-2.5 shadow-md hover:shadow-lg transition-all transform active:scale-95">
+            <i class="fa-solid fa-bag-shopping text-base"></i>
+            <span class="hidden sm:inline text-xs uppercase tracking-wider">Cart</span>
+            <span id="cartBadge" class="bg-brand-orange text-white text-xs font-extrabold px-2 py-0.5 rounded-full">0</span>
+          </button>
+
+          <button onclick="toggleMobileNav()" class="md:hidden text-slate-700 hover:text-brand-orange p-2 text-xl">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Navigation -->
+    <div id="mobileNav" class="hidden md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-2">
+      <div class="pt-2 pb-2">
+        <input type="text" id="mobileSearchInput" oninput="syncAndFilter(this.value)" placeholder="Search menu..." class="w-full bg-slate-100 text-sm rounded-xl py-2.5 pl-10 pr-4 focus:outline-none border border-slate-200" />
+      </div>
+      <a href="#hero" onclick="toggleMobileNav()" class="block py-2 text-slate-700 font-bold hover:text-brand-orange">Home</a>
+      <a href="#menu" onclick="setFilter('pizzas'); toggleMobileNav();" class="block py-2 text-slate-700 font-bold hover:text-brand-orange">🍕 Pizzas Menu</a>
+      <a href="#menu" onclick="setFilter('drinks'); toggleMobileNav();" class="block py-2 text-slate-700 font-bold hover:text-brand-orange">🥤 Drinks Menu</a>
+      <a href="#offers" onclick="toggleMobileNav()" class="block py-2 text-slate-700 font-bold hover:text-brand-orange">Special Deals</a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section id="hero" class="relative overflow-hidden bg-gradient-to-br from-amber-50/80 via-orange-50/50 to-red-50/60 py-12 lg:py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+          <div class="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-orange-100">
+            <span class="flex h-3 w-3 relative">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-orange opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-brand-orange"></span>
+            </span>
+            <span class="text-xs sm:text-sm font-bold text-slate-800">🚀 Express Delivery in Under 30 Mins</span>
+          </div>
+
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 leading-tight">
+            Delicious <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red via-brand-orange to-brand-amber">Stone-Baked Pizza</span> & Ice Cold Drinks
+          </h1>
+
+          <p class="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium">
+            Handcrafted pizzas topped with fresh organic ingredients paired with chilled sodas, natural fruit juices, and artisanal iced drinks!
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+            <a href="#menu" onclick="setFilter('pizzas')" class="w-full sm:w-auto bg-gradient-to-r from-brand-red to-brand-orange hover:from-brand-darkRed hover:to-brand-red text-white px-8 py-4 rounded-2xl font-extrabold text-base shadow-xl shadow-orange-500/25 transition-all transform hover:-translate-y-1 text-center">
+              Explore Pizzas <i class="fa-solid fa-pizza-slice ml-2"></i>
+            </a>
+            <a href="#menu" onclick="setFilter('drinks')" class="w-full sm:w-auto bg-white hover:bg-slate-100 text-slate-800 px-8 py-4 rounded-2xl font-bold text-base shadow-md border border-slate-200 transition-all text-center">
+              Explore Drinks <i class="fa-solid fa-glass-water ml-2 text-brand-orange"></i>
+            </a>
+          </div>
+
+          <div class="pt-6 border-t border-slate-200/80 grid grid-cols-3 gap-4 max-w-lg mx-auto lg:mx-0">
+            <div class="text-center lg:text-left">
+              <h4 class="font-black text-xl text-slate-900">6 Classic</h4>
+              <p class="text-xs text-slate-500 font-medium">Artisan Pizzas</p>
+            </div>
+            <div class="text-center lg:text-left">
+              <h4 class="font-black text-xl text-slate-900">6 Chilled</h4>
+              <p class="text-xs text-slate-500 font-medium">Refreshing Drinks</p>
+            </div>
+            <div class="text-center lg:text-left">
+              <h4 class="font-black text-xl text-slate-900">4.9 ★</h4>
+              <p class="text-xs text-slate-500 font-medium">Customer Rating</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 flex justify-center relative">
+          <div class="absolute w-72 h-72 sm:w-96 sm:h-96 bg-brand-orange/20 rounded-full filter blur-3xl -z-10"></div>
+          
+          <div class="relative w-full max-w-md animate-float flex justify-center">
+            <img 
+              src="download (3) - Copy - Copy.jpg" 
+              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80';"
+              alt="Gourmet Pizza"
+              class="w-80 sm:w-96 h-auto object-contain food-img-shadow rounded-full"
+            />
+            <div class="absolute -bottom-4 -left-2 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-orange-100 text-brand-orange flex items-center justify-center font-bold text-xl">
+                🥤
+              </div>
+              <div>
+                <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Perfect Pair</p>
+                <p class="text-sm font-black text-slate-900">Pizza + Drink Combos</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Menu Section -->
+  <section id="menu" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center space-y-3 mb-10">
+      <span class="text-brand-orange font-black text-xs uppercase tracking-widest bg-orange-100/80 px-3.5 py-1.5 rounded-full">Explore Menu</span>
+      <h2 class="text-3xl sm:text-4xl font-black text-slate-900">Pizzas & Cold Beverages</h2>
+      <p class="text-slate-500 max-w-xl mx-auto text-sm">Select your favorite artisan pizza and pair it with fresh, ice-cold beverages delivered directly to your doorstep.</p>
+    </div>
+
+    <!-- Category Filter Tabs -->
+    <div class="flex items-center justify-start md:justify-center gap-2 overflow-x-auto pb-4 mb-10 no-scrollbar">
+      <button onclick="setFilter('all')" id="tab-all" class="filter-btn active bg-brand-orange text-white px-6 py-2.5 rounded-full text-xs font-extrabold shadow-md whitespace-nowrap transition-all">
+        🍽️ All Menu
+      </button>
+      <button onclick="setFilter('pizzas')" id="tab-pizzas" class="filter-btn bg-white hover:bg-slate-100 text-slate-700 px-6 py-2.5 rounded-full text-xs font-extrabold border border-slate-200 whitespace-nowrap transition-all">
+        🍕 Pizzas
+      </button>
+      <button onclick="setFilter('drinks')" id="tab-drinks" class="filter-btn bg-white hover:bg-slate-100 text-slate-700 px-6 py-2.5 rounded-full text-xs font-extrabold border border-slate-200 whitespace-nowrap transition-all">
+        🥤 Drinks & Beverages
+      </button>
+      <button onclick="setFilter('popular')" id="tab-popular" class="filter-btn bg-white hover:bg-slate-100 text-slate-700 px-6 py-2.5 rounded-full text-xs font-extrabold border border-slate-200 whitespace-nowrap transition-all">
+        🔥 Popular Items
+      </button>
+    </div>
+
+    <!-- Food & Drink Grid Container -->
+    <div id="foodGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- Dynamic Javascript Content -->
+    </div>
+  </section>
+
+  <!-- Special Party Offers Section -->
+  <section id="offers" class="py-14 bg-slate-900 text-white my-12 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div class="space-y-4">
+          <span class="bg-brand-amber text-slate-900 px-3 py-1 rounded-full font-black text-xs uppercase tracking-wider">Ultimate Party Bundle</span>
+          <h2 class="text-3xl sm:text-4xl font-black leading-tight">Get Any 2 Pizzas + 2 Drinks for Only ₹2,499!</h2>
+          <p class="text-slate-400 text-sm">Includes your choice of 2 Large stone-baked pizzas and 2 chilled 500ml beverages of your choice.</p>
+          <div class="pt-2">
+            <button onclick="addBundleToCart()" class="bg-brand-orange hover:bg-brand-red text-white font-extrabold px-7 py-3.5 rounded-2xl text-sm transition-all transform hover:scale-105 shadow-xl">
+              Add Party Bundle to Cart <i class="fa-solid fa-fire ml-2"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="bg-white/5 p-6 rounded-3xl border border-white/10 backdrop-blur-md flex flex-col sm:flex-row items-center gap-6">
+          <div class="w-28 h-28 rounded-2xl overflow-hidden shrink-0 shadow-xl border-2 border-brand-orange bg-slate-800 p-2">
+            <img 
+              src="Download Isolated Regina style pizza on transparent background for free.jpg" 
+              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=500&q=80';" 
+              alt="Party Combo" 
+              class="w-full h-full object-contain" 
+            />
+          </div>
+          <div>
+            <h3 class="font-extrabold text-xl mb-1 text-white">Express Rewards</h3>
+            <p class="text-xs text-slate-400 mb-3">Earn reward points on every pizza and drink purchase. Get a free drink with every 100 points collected!</p>
+            <span class="text-xs font-bold text-brand-amber cursor-pointer hover:underline">Learn More &rarr;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-slate-950 text-slate-400 py-12 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+      <div class="space-y-3">
+        <a href="#hero" class="flex items-center gap-2">
+          <i class="fa-solid fa-pizza-slice text-brand-orange text-2xl"></i>
+          <span class="text-white font-black tracking-tight text-xl">PIZZA & <span class="text-brand-orange">DRINKS</span></span>
+        </a>
+        <p class="text-xs text-slate-400 leading-relaxed">Serving oven-fresh gourmet pizzas and ice-cold artisan drinks straight to your doorstep.</p>
+      </div>
+
+      <div>
+        <h4 class="text-white font-bold text-sm mb-3">Quick Navigation</h4>
+        <ul class="space-y-2 text-xs">
+          <li><a href="#hero" class="hover:text-white">Home</a></li>
+          <li><a href="#menu" onclick="setFilter('pizzas')" class="hover:text-white">Pizzas Menu</a></li>
+          <li><a href="#menu" onclick="setFilter('drinks')" class="hover:text-white">Cold Drinks</a></li>
+          <li><a href="#offers" class="hover:text-white">Special Deals</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-white font-bold text-sm mb-3">Delivery Hours</h4>
+        <p class="text-xs text-slate-400">Monday - Thursday: 11:00 AM - 10:00 PM</p>
+        <p class="text-xs text-slate-400 mt-1">Friday - Sunday: 10:30 AM - 11:30 PM</p>
+      </div>
+
+      <div>
+        <h4 class="text-white font-bold text-sm mb-3">Contact Store</h4>
+        <p class="text-xs text-slate-400"><i class="fa-solid fa-location-dot text-brand-orange mr-2"></i>456 Gourmet Ave, Connaught Place, New Delhi</p>
+        <p class="text-xs text-slate-400 mt-2"><i class="fa-solid fa-phone text-brand-orange mr-2"></i>+91 (800) 555-FOOD</p>
+      </div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-800 pt-6 text-center text-xs text-slate-500">
+      © 2026 Pizza & Drinks Express Food Delivery. All Rights Reserved.
+    </div>
+  </footer>
+
+  <!-- Slide-Over Cart Drawer Backdrop -->
+  <div id="cartOverlay" onclick="toggleCartDrawer()" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden transition-opacity"></div>
+
+  <!-- Slide-Over Cart Drawer -->
+  <div id="cartDrawer" class="fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+    
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-bag-shopping text-brand-orange text-xl"></i>
+        <h3 class="font-black text-lg text-slate-900">Your Express Order</h3>
+      </div>
+      <button onclick="toggleCartDrawer()" class="w-8 h-8 rounded-full bg-white text-slate-500 hover:text-slate-800 flex items-center justify-center shadow-sm">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Items Container -->
+    <div id="cartItemsList" class="flex-1 overflow-y-auto p-5 space-y-4">
+      <!-- Dynamic JS Content -->
+    </div>
+
+    <!-- Cart Summary -->
+    <div class="p-5 border-t border-slate-100 bg-slate-50 space-y-3">
+      <div class="space-y-1.5 text-xs text-slate-600">
+        <div class="flex justify-between">
+          <span>Subtotal</span>
+          <span id="summarySubtotal" class="font-bold text-slate-900">₹0.00</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Express Delivery</span>
+          <span id="summaryDelivery" class="font-bold text-slate-900">₹149.00</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Tax (GST 5%)</span>
+          <span id="summaryTax" class="font-bold text-slate-900">₹0.00</span>
+        </div>
+        <div class="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-200">
+          <span>Total</span>
+          <span id="summaryTotal" class="text-brand-orange">₹0.00</span>
+        </div>
+      </div>
+
+      <button onclick="openCheckoutModal()" id="checkoutBtn" class="w-full bg-brand-orange hover:bg-brand-red text-white py-3.5 rounded-2xl font-extrabold text-sm shadow-lg transition-all flex items-center justify-center gap-2">
+        <span>Proceed to Checkout</span>
+        <i class="fa-solid fa-arrow-right text-xs"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Checkout Modal System -->
+  <div id="checkoutModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+    <!-- Step 1: Address & Payment Form -->
+    <div id="checkoutStep1" class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 my-8">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="text-xl font-black text-slate-900">Delivery Information</h3>
+        <button onclick="closeCheckoutModal()" class="text-slate-400 hover:text-slate-700">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="checkoutForm" onsubmit="handleFormSubmit(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Full Name</label>
+          <input type="text" required placeholder="Aarav Sharma" class="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-orange" />
+        </div>
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Phone Number</label>
+          <input type="tel" required placeholder="+91 98765 43210" class="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-orange" />
+        </div>
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Delivery Address</label>
+          <input type="text" required placeholder="House No, Street, Apartment, Landmark" class="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-orange" />
+        </div>
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Payment Method</label>
+          <select class="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-orange bg-white font-medium">
+            <option>UPI (Google Pay / PhoneNe / Paytm)</option>
+            <option>Credit / Debit Card</option>
+            <option>Net Banking</option>
+            <option>Cash on Delivery (COD)</option>
+          </select>
+        </div>
+
+        <button type="submit" class="w-full bg-brand-orange hover:bg-brand-red text-white py-3.5 rounded-2xl font-black text-sm shadow-lg transition-all mt-4">
+          Confirm & Place Order
+        </button>
+      </form>
+    </div>
+
+    <!-- Step 2: Order Success View -->
+    <div id="checkoutStep2" class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl text-center space-y-4 hidden">
+      <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <h3 class="text-2xl font-black text-slate-900">Order Placed Successfully!</h3>
+      <p class="text-xs text-slate-500 leading-relaxed">Your pizzas are baking in our stone ovens and your drinks are being chilled! Get ready for fresh delivery.</p>
+      
+      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-left space-y-2 text-xs">
+        <div class="flex justify-between">
+          <span class="text-slate-500">Estimated Delivery:</span>
+          <span class="font-extrabold text-slate-900">20 - 25 Mins</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Status:</span>
+          <span class="font-extrabold text-brand-orange">Preparing & Packing 🍕🥤</span>
+        </div>
+      </div>
+
+      <button onclick="finishCheckout()" class="w-full bg-slate-900 text-white py-3.5 rounded-2xl font-bold text-sm hover:bg-black transition-all">
+        Back to Menu
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Floating Cart Bar -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 z-30 md:hidden flex items-center justify-between shadow-2xl">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-orange-100 text-brand-orange flex items-center justify-center font-bold">
+        <i class="fa-solid fa-bag-shopping"></i>
+      </div>
+      <div>
+        <p class="text-[10px] text-slate-400 uppercase font-bold">Total</p>
+        <p id="mobileFloatingTotal" class="text-sm font-black text-slate-900">₹0.00</p>
+      </div>
+    </div>
+    <button onclick="toggleCartDrawer()" class="bg-brand-orange text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-md">
+      View Cart (<span id="mobileCartCount">0</span>)
+    </button>
+  </div>
+
+  <script>
+    const menuData = [
+      // --- PIZZAS ---
+      {
+        id: 'pizza-hawaiian',
+        title: 'Hawaiian Pizza',
+        type: 'pizza',
+        category: 'pizzas',
+        basePrice: 699,
+        rating: 4.8,
+        description: 'Juicy pineapple chunks, savory ham, and melted mozzarella cheese.',
+        primaryImg: 'Hawaiian Pizza With Pineapple, Pizza, Hawaiian, Pineapple PNG Transparent Image and Clipart for Free Download.jpg',
+        fallbackImg: 'download (5) - Copy - Copy.jpg',
+        onlineFallback: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80',
+        tags: ['Hawaiian', 'Popular'],
+        isPopular: true
+      },
+      {
+        id: 'pizza-mushroom',
+        title: 'Mushroom & Red Onion Special',
+        type: 'pizza',
+        category: 'pizzas',
+        basePrice: 649,
+        rating: 4.7,
+        description: 'Fresh field mushrooms, crisp red onion rings, garlic, and mozzarella.',
+        primaryImg: 'download (4).jpg',
+        fallbackImg: 'download (4).jpg',
+        onlineFallback: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=600&q=80',
+        tags: ['Vegetarian'],
+        isPopular: false
+      },
+      {
+        id: 'pizza-pepperoni',
+        title: 'Classic Pepperoni',
+        type: 'pizza',
+        category: 'pizzas',
+        basePrice: 749,
+        rating: 4.9,
+        description: 'Loaded with double crispy pepperoni slices and signature tomato sauce.',
+        primaryImg: 'Pizza.jpg',
+        fallbackImg: 'Pizza.jpg',
+        onlineFallback: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=600&q=80',
+        tags: ['Bestseller'],
+        isPopular: true
+      },
+      {
+        id: 'pizza-margherita',
+        title: 'Margherita Pizza',
+        type: 'pizza',
+        category: 'pizzas',
+        basePrice: 599,
+        rating: 4.6,
+        description: 'Plain cheese, vine tomatoes, extra virgin olive oil, and organic basil.',
+        primaryImg: 'Margarita Pizza (Plain).jpg',
+        fallbackImg: 'Margarita Pizza (Plain).jpg',
+        onlineFallback: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=600&q=80',
+        tags: ['Classic'],
+        isPopular: false
+      },
+      {
+        id: 'pizza-supreme',
+        title: 'Supreme Feast Pizza',
+        type: 'pizza',
+        category: 'pizzas',
+        basePrice: 799,
+        rating: 4.9,
+        description: 'Black olives, bell peppers, sliced mushrooms, sausage, and pepperoni.',
+        primaryImg: 'Download Isolated Regina style pizza on transparent background for free.jpg',
+        fallbackImg: 'Download Isolated Regina style pizza on transparent background for free.jpg',
+        onlineFallback: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=600&q=80',
+        tags: ['Deluxe'],
+        isPopular: true
+      },
+      {
+        id: 'pizza-deluxe',
+        title: 'Italian Deluxe Pizza',
+        type: 'pizza',
+        category: 'pizzas',
+        basePrice: 849,
+        rating: 5.0,
+        description: 'Fresh basil leaves, sweet cherry tomatoes, mushrooms, and olives.',
+        primaryImg: 'download (3) - Copy - Copy.jpg',
+        fallbackImg: 'download (3) - Copy - Copy.jpg',
+        onlineFallback: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80',
+        tags: ['Chef Special'],
+        isPopular: true
+      },
+
+      // --- DRINKS ---
+      {
+        id: 'drink-coke',
+        title: 'Coca-Cola Original',
+        type: 'drink',
+        category: 'drinks',
+        basePrice: 129,
+        rating: 4.9,
+        description: 'Chilled 500ml classic Coca-Cola served ice-cold for maximum refresh.',
+        primaryImg: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80',
+        fallbackImg: 'https://images.unsplash.com/photo-1554866585-cd94860890b7?auto=format&fit=crop&w=600&q=80',
+        onlineFallback: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80',
+        tags: ['Chilled 500ml'],
+        isPopular: true
+      },
+      {
+        id: 'drink-lemonade',
+        title: 'Fresh Lemonade & Iced Mint',
+        type: 'drink',
+        category: 'drinks',
+        basePrice: 179,
+        rating: 4.8,
+        description: 'Hand-pressed organic lemons with crushed ice and fresh mint leaves.',
+        primaryImg: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80',
+        fallbackImg: 'https://images.unsplash.com/photo-1523371054106-bbf80586c38c?auto=format&fit=crop&w=600&q=80',
+        onlineFallback: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80',
+        tags: ['Freshly Made'],
+        isPopular: true
+      },
+      {
+        id: 'drink-orange',
+        title: 'Fresh Squeezed Orange Juice',
+        type: 'drink',
+        category: 'drinks',
+        basePrice: 199,
+        rating: 4.7,
+        description: '100% natural, freshly squeezed citrus oranges packed with vitamin C.',
+        primaryImg: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=600&q=80',
+        fallbackImg: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=600&q=80',
+        onlineFallback: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=600&q=80',
+        tags: ['100% Juice'],
+        isPopular: false
+      },
+      {
+        id: 'drink-sparkling',
+        title: 'Sparkling Soda & Lime Water',
+        type: 'drink',
+        category: 'drinks',
+        basePrice: 119,
+        rating: 4.5,
+        description: 'Refreshing sparkling mineral water served with a slice of fresh lime.',
+        primaryImg: 'https://images.unsplash.com/photo-1527661591475-527312dd65f5?auto=format&fit=crop&w=600&q=80',
+        fallbackImg: 'https://images.unsplash.com/photo-1560512823-829485b8bf24?auto=format&fit=crop&w=600&q=80',
+        onlineFallback: 'https://images.unsplash.com/photo-1527661591475-527312dd65f5?auto=format&fit=crop&w=600&q=80',
+        tags: ['Zero Sugar'],
+        isPopular: false
+      },
+      {
+        id: 'drink-coffee',
+        title: 'Cold Brew Iced Coffee',
+        type: 'drink',
+        category: 'drinks',
+        basePrice: 219,
+        rating: 4.9,
+        description: 'Smooth 12-hour cold brewed Arabica coffee over ice cubes.',
+        primaryImg: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=600&q=80',
+        fallbackImg: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=600&q=80',
+        onlineFallback: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=600&q=80',
+        tags: ['Energizing'],
+        isPopular: true
+      },
+      {
+        id: 'drink-smoothie',
+        title: 'Tropical Mango Smoothie',
+        type: 'drink',
+        category: 'drinks',
+        basePrice: 249,
+        rating: 4.8,
+        description: 'Creamy blended Alphonso mango pulp, yogurt, and honey.',
+        primaryImg: 'https://images.unsplash.com/photo-1553530666-ba11a7da3888?auto=format&fit=crop&w=600&q=80',
+        fallbackImg: 'https://images.unsplash.com/photo-1505252585461-04db1eb84625?auto=format&fit=crop&w=600&q=80',
+        onlineFallback: 'https://images.unsplash.com/photo-1553530666-ba11a7da3888?auto=format&fit=crop&w=600&q=80',
+        tags: ['Tropical'],
+        isPopular: true
+      }
+    ];
+
+    let cart = [];
+    let activeFilter = 'all';
+    let selectedOptions = {};
+
+    // Initialize Selections
+    menuData.forEach(item => {
+      if (item.type === 'pizza') {
+        selectedOptions[item.id] = { label: 'Medium', priceAdd: 150 };
+      } else {
+        selectedOptions[item.id] = { label: 'Regular (500ml)', priceAdd: 0 };
+      }
+    });
+
+    function renderMenu() {
+      const grid = document.getElementById('foodGrid');
+      const searchVal = (document.getElementById('searchInput').value || '').toLowerCase();
+
+      const filtered = menuData.filter(item => {
+        let matchesCategory = false;
+        if (activeFilter === 'all') matchesCategory = true;
+        else if (activeFilter === 'popular') matchesCategory = item.isPopular;
+        else matchesCategory = (item.category === activeFilter);
+
+        const matchesSearch = item.title.toLowerCase().includes(searchVal) || item.description.toLowerCase().includes(searchVal);
+        return matchesCategory && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-16 bg-white rounded-3xl border border-slate-100 shadow-sm">
+            <div class="text-4xl mb-3">🔍</div>
+            <h3 class="font-bold text-slate-800 text-lg">No food or drinks found</h3>
+            <p class="text-xs text-slate-400 mt-1">Try tweaking your search term or tab selection.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => {
+        const currentOpt = selectedOptions[item.id];
+        const calculatedPrice = item.basePrice + currentOpt.priceAdd;
+        const isPizza = item.type === 'pizza';
+
+        return `
+          <div class="food-card bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
+            
+            <div class="p-6 relative flex flex-col items-center text-center">
+              
+              <!-- Badges -->
+              <div class="absolute top-4 left-4 z-10 flex gap-1">
+                ${item.tags.map(t => `<span class="${isPizza ? 'bg-brand-orange' : 'bg-brand-teal'} text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">${t}</span>`).join('')}
+              </div>
+
+              <!-- Rating Badge -->
+              <div class="absolute top-4 right-4 z-10 bg-amber-50 px-2.5 py-1 rounded-full text-xs font-black text-brand-orange border border-amber-200/50 flex items-center gap-1">
+                <i class="fa-solid fa-star text-brand-amber"></i>
+                <span>${item.rating}</span>
+              </div>
+
+              <!-- Image with Fallbacks -->
+              <div class="${isPizza ? 'w-48 h-48' : 'w-40 h-44'} my-4 relative flex items-center justify-center">
+                <img 
+                  src="${item.primaryImg}" 
+                  onerror="this.onerror=null; this.src='${item.fallbackImg}'; this.onerror=function(){ this.src='${item.onlineFallback}'; }"
+                  alt="${item.title}" 
+                  class="food-img w-full h-full object-contain food-img-shadow transition-transform duration-500 ease-out" 
+                />
+              </div>
+
+              <!-- Title & Description -->
+              <h3 class="font-black text-slate-900 text-lg group-hover:text-brand-orange transition-colors">
+                ${item.title}
+              </h3>
+              <p class="text-xs text-slate-500 mt-2 leading-relaxed min-h-[36px]">
+                ${item.description}
+              </p>
+
+              <!-- Option Selectors -->
+              <div class="w-full mt-4">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  ${isPizza ? 'Select Pizza Size' : 'Select Drink Portion'}
+                </p>
+                ${isPizza ? `
+                  <div class="grid grid-cols-3 gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                    <button onclick="changeOption('${item.id}', 'Small', 0)" class="py-1.5 rounded-xl text-xs font-extrabold transition-all ${currentOpt.label === 'Small' ? 'bg-white text-brand-orange shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-900'}">
+                      Small
+                    </button>
+                    <button onclick="changeOption('${item.id}', 'Medium', 150)" class="py-1.5 rounded-xl text-xs font-extrabold transition-all ${currentOpt.label === 'Medium' ? 'bg-white text-brand-orange shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-900'}">
+                      Medium
+                    </button>
+                    <button onclick="changeOption('${item.id}', 'Large', 300)" class="py-1.5 rounded-xl text-xs font-extrabold transition-all ${currentOpt.label === 'Large' ? 'bg-white text-brand-orange shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-900'}">
+                      Large
+                    </button>
+                  </div>
+                ` : `
+                  <div class="grid grid-cols-2 gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                    <button onclick="changeOption('${item.id}', 'Regular (500ml)', 0)" class="py-1.5 rounded-xl text-xs font-extrabold transition-all ${currentOpt.label.includes('Regular') ? 'bg-white text-brand-teal shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-900'}">
+                      Regular
+                    </button>
+                    <button onclick="changeOption('${item.id}', 'Large (750ml)', 75)" class="py-1.5 rounded-xl text-xs font-extrabold transition-all ${currentOpt.label.includes('Large') ? 'bg-white text-brand-teal shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-900'}">
+                      Large (+₹75)
+                    </button>
+                  </div>
+                `}
+              </div>
+
+            </div>
+
+            <!-- Card Bottom Actions -->
+            <div class="p-6 pt-0 flex items-center justify-between border-t border-slate-50 mt-2">
+              <div>
+                <span class="text-[10px] text-slate-400 block font-bold uppercase">Price</span>
+                <span class="text-2xl font-black text-slate-900">₹${calculatedPrice.toLocaleString('en-IN')}</span>
+              </div>
+
+              <button onclick="addToCart('${item.id}')" class="${isPizza ? 'bg-brand-orange hover:bg-brand-red' : 'bg-brand-teal hover:bg-teal-700'} text-white px-5 py-3 rounded-2xl font-black text-xs shadow-md transition-all flex items-center gap-2 transform active:scale-95">
+                <i class="fa-solid ${isPizza ? 'fa-pizza-slice' : 'fa-glass-water'}"></i>
+                <span>Add to Bag</span>
+              </button>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    function changeOption(itemId, label, priceAdd) {
+      selectedOptions[itemId] = { label, priceAdd };
+      renderMenu();
+    }
+
+    function setFilter(category) {
+      activeFilter = category;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('bg-brand-orange', 'text-white', 'shadow-md');
+        btn.classList.add('bg-white', 'text-slate-700', 'border', 'border-slate-200');
+      });
+
+      const activeBtn = document.getElementById(`tab-${category}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-white', 'text-slate-700', 'border', 'border-slate-200');
+        activeBtn.classList.add('bg-brand-orange', 'text-white', 'shadow-md');
+      }
+
+      renderMenu();
+    }
+
+    function filterFoodItems() {
+      renderMenu();
+    }
+
+    function syncAndFilter(val) {
+      document.getElementById('searchInput').value = val;
+      renderMenu();
+    }
+
+    function addToCart(itemId) {
+      const item = menuData.find(m => m.id === itemId);
+      if (!item) return;
+
+      const opt = selectedOptions[itemId];
+      const finalPrice = item.basePrice + opt.priceAdd;
+      const cartKey = `${item.id}-${opt.label}`;
+
+      const existingIdx = cart.findIndex(c => c.key === cartKey);
+
+      if (existingIdx > -1) {
+        cart[existingIdx].quantity += 1;
+      } else {
+        cart.push({
+          key: cartKey,
+          id: item.id,
+          title: item.title,
+          type: item.type,
+          option: opt.label,
+          price: finalPrice,
+          img: item.primaryImg,
+          fallbackImg: item.fallbackImg,
+          onlineFallback: item.onlineFallback,
+          quantity: 1
+        });
+      }
+
+      showToast("Added to Order", `${item.title} (${opt.label})`);
+      updateCartUI();
+    }
+
+    function addBundleToCart() {
+      const bundleKey = 'party-bundle-combo';
+      const existingIdx = cart.findIndex(c => c.key === bundleKey);
+
+      if (existingIdx > -1) {
+        cart[existingIdx].quantity += 1;
+      } else {
+        cart.push({
+          key: bundleKey,
+          id: 'bundle-combo',
+          title: 'Party Bundle: 2 Pizzas + 2 Drinks',
+          type: 'combo',
+          option: 'Party Pack',
+          price: 2499,
+          img: 'Download Isolated Regina style pizza on transparent background for free.jpg',
+          fallbackImg: 'download (3) - Copy - Copy.jpg',
+          onlineFallback: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=500&q=80',
+          quantity: 1
+        });
+      }
+
+      showToast("Bundle Added!", "Party Bundle added to bag!");
+      updateCartUI();
+      toggleCartDrawer();
+    }
+
+    function updateQuantity(cartKey, delta) {
+      const idx = cart.findIndex(c => c.key === cartKey);
+      if (idx > -1) {
+        cart[idx].quantity += delta;
+        if (cart[idx].quantity <= 0) {
+          cart.splice(idx, 1);
+        }
+      }
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const delivery = subtotal > 0 ? 149 : 0;
+      const tax = subtotal * 0.05;
+      const grandTotal = subtotal + delivery + tax;
+
+      document.getElementById('cartBadge').innerText = totalCount;
+      document.getElementById('mobileCartCount').innerText = totalCount;
+
+      const cartList = document.getElementById('cartItemsList');
+      if (cart.length === 0) {
+        cartList.innerHTML = `
+          <div class="text-center py-16 space-y-3">
+            <div class="text-5xl opacity-40">🛒</div>
+            <p class="font-black text-slate-700">Your bag is empty</p>
+            <p class="text-xs text-slate-400">Add delicious pizzas & refreshing drinks to get started!</p>
+          </div>
+        `;
+      } else {
+        cartList.innerHTML = cart.map(item => `
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between gap-4">
+            <!-- Enlarged Cart Item Image -->
+            <div class="w-20 h-20 rounded-2xl overflow-hidden shrink-0 bg-white p-1.5 border border-slate-200 shadow-sm flex items-center justify-center">
+              <img 
+                src="${item.img}" 
+                onerror="this.onerror=null; this.src='${item.fallbackImg}'; this.onerror=function(){ this.src='${item.onlineFallback}'; }"
+                alt="${item.title}" 
+                class="w-full h-full object-contain transform hover:scale-110 transition-transform" 
+              />
+            </div>
+            
+            <div class="flex-1">
+              <h4 class="font-extrabold text-sm text-slate-900 leading-snug">${item.title}</h4>
+              <p class="text-[11px] text-slate-500 font-bold mt-0.5">${item.option}</p>
+              <p class="text-sm font-black text-brand-orange mt-1">₹${(item.price * item.quantity).toLocaleString('en-IN')}</p>
+            </div>
+
+            <div class="flex flex-col items-end gap-2">
+              <div class="flex items-center gap-2 bg-white px-2 py-1 rounded-xl shadow-sm border border-slate-200">
+                <button onclick="updateQuantity('${item.key}', -1)" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs">-</button>
+                <span class="text-xs font-bold text-slate-800 w-4 text-center">${item.quantity}</span>
+                <button onclick="updateQuantity('${item.key}', 1)" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs">+</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      document.getElementById('summarySubtotal').innerText = `₹${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      document.getElementById('summaryDelivery').innerText = `₹${delivery.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      document.getElementById('summaryTax').innerText = `₹${tax.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      document.getElementById('summaryTotal').innerText = `₹${grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      document.getElementById('mobileFloatingTotal').innerText = `₹${grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    function toggleCartDrawer() {
+      const drawer = document.getElementById('cartDrawer');
+      const overlay = document.getElementById('cartOverlay');
+
+      if (drawer.classList.contains('translate-x-full')) {
+        drawer.classList.remove('translate-x-full');
+        overlay.classList.remove('hidden');
+      } else {
+        drawer.classList.add('translate-x-full');
+        overlay.classList.add('hidden');
+      }
+    }
+
+    function toggleMobileNav() {
+      document.getElementById('mobileNav').classList.toggle('hidden');
+    }
+
+    function showToast(title, msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-title').innerText = title;
+      document.getElementById('toast-msg').innerText = msg;
+
+      toast.classList.remove('translate-x-96', 'opacity-0');
+      toast.classList.add('translate-x-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-x-0', 'opacity-100');
+        toast.classList.add('translate-x-96', 'opacity-0');
+      }, 3000);
+    }
+
+    function openCheckoutModal() {
+      if (cart.length === 0) {
+        showToast("Cart Empty", "Add items to your bag before checking out!");
+        return;
+      }
+      toggleCartDrawer();
+      document.getElementById('checkoutStep1').classList.remove('hidden');
+      document.getElementById('checkoutStep2').classList.add('hidden');
+      document.getElementById('checkoutModal').classList.remove('hidden');
+    }
+
+    function closeCheckoutModal() {
+      document.getElementById('checkoutModal').classList.add('hidden');
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      document.getElementById('checkoutStep1').classList.add('hidden');
+      document.getElementById('checkoutStep2').classList.remove('hidden');
+    }
+
+    function finishCheckout() {
+      closeCheckoutModal();
+      cart = [];
+      updateCartUI();
+    }
+
+    // Startup Initialization
+    window.onload = function() {
+      renderMenu();
+      updateCartUI();
+    };
+  </script>
+</body>
+</html>
